@@ -1,0 +1,2239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Zestwell — Citrus Season</title>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"
+      }
+    }
+  </script>
+  <style>
+    /* Self-hosted-style font declarations keep typography stable while the page swaps to local fallbacks if remote files fail. */
+    @font-face {
+      font-family: "Oswald";
+      src: url("https://fonts.gstatic.com/s/oswald/v56/TK3_WkUHHAIjg75cFRf3bXL8LICs1xZosUZiYA.woff2") format("woff2");
+      font-weight: 200 700;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "Newsreader";
+      src: url("https://fonts.gstatic.com/s/newsreader/v20/cY9VfjOCX1hbuyalUrK439L_OJxNQe_vBNxBfN5pCzA.woff2") format("woff2");
+      font-weight: 200 800;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "Newsreader";
+      src: url("https://fonts.gstatic.com/s/newsreader/v20/cY9XfjOCX1hbuyalUrK439L_VHnWQJZvnBTw0g.woff2") format("woff2");
+      font-weight: 400;
+      font-style: italic;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "DM Mono";
+      src: url("https://fonts.gstatic.com/s/dmmono/v14/aFTR7PB1QTsUX8KYthqS2C9l.woff2") format("woff2");
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "DM Mono";
+      src: url("https://fonts.gstatic.com/s/dmmono/v14/aFTU7PB1QTsUX8KYhhia2A.woff2") format("woff2");
+      font-weight: 500;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    :root {
+      --wall: #FFF9EC;
+      --floor: #F8E7D2;
+      --ink: #3A3550;
+      --ink-60: rgba(58,53,80,.6);
+      --ink-35: rgba(58,53,80,.35);
+      --ink-15: rgba(58,53,80,.15);
+      --lemon: #FBE46D;
+      --blush: #F7D2D1;
+      --chip-on: #FCEB93;
+      --drawer: #F9E3DF;
+      --page: #FFF9EF;
+      --u: min(100vw / 1440, 100vh / 900);
+      --w: calc(100vw / 1440);
+      --ease-soft: cubic-bezier(.2,.7,.2,1);
+    }
+
+    @media (max-width: 819px), (orientation: portrait) and (max-width: 1100px), (orientation: landscape) and (max-height: 500px) {
+      :root {
+        --u: 1px;
+        --w: 1px;
+      }
+    }
+
+    /* The global page reset matches the art-directed full-screen application shell. */
+    * { box-sizing: border-box; }
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: var(--wall);
+      color: var(--ink);
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+      font-family: "Newsreader", Georgia, serif;
+    }
+    body.app-open-nav .nav {
+      background: var(--page);
+      box-shadow: inset 0 -1px 0 var(--ink-15);
+    }
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+    button, input {
+      font: inherit;
+      color: inherit;
+    }
+    button {
+      border: 0;
+      background: none;
+      padding: 0;
+      cursor: pointer;
+    }
+
+    .mask-line {
+      display: inline-flex;
+      overflow: hidden;
+      vertical-align: top;
+    }
+    .mask-line > span {
+      display: inline-block;
+      transform: translateY(105%);
+      will-change: transform;
+    }
+
+    .nav {
+      position: fixed;
+      inset: 0 0 auto 0;
+      height: calc(58 * var(--u));
+      display: flex;
+      align-items: center;
+      padding: 0 calc(27 * var(--u));
+      z-index: 30;
+      transition: background .3s ease, box-shadow .3s ease;
+    }
+    .logo {
+      margin-right: calc(36 * var(--u));
+      font-family: "Newsreader", Georgia, serif;
+      font-weight: 500;
+      font-size: calc(21 * var(--u));
+      letter-spacing: -0.01em;
+      min-height: 24px;
+      display: inline-flex;
+      align-items: center;
+    }
+    .nav-links {
+      display: flex;
+      gap: calc(22 * var(--u));
+      align-items: center;
+    }
+    .nav-links a {
+      min-height: 24px;
+      display: inline-flex;
+      align-items: center;
+      font-size: max(11px, calc(13.5 * var(--u)));
+      opacity: .85;
+      transition: opacity .2s ease;
+    }
+    .nav-links a:hover { opacity: 1; }
+    .nav-right {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: calc(14 * var(--u));
+    }
+    .pill-field,
+    .currency-pill {
+      height: calc(27 * var(--u));
+      border: 1px solid var(--ink-35);
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      background: rgba(255,255,255,.15);
+    }
+    .pill-field {
+      width: calc(159 * var(--u));
+      padding: 0 calc(6 * var(--u)) 0 calc(11 * var(--u));
+      gap: calc(7 * var(--u));
+      color: var(--ink-60);
+      font-family: "DM Mono", ui-monospace, monospace;
+      font-size: max(11px, calc(12 * var(--u)));
+    }
+    .pill-field .spacer { flex: 1; }
+    .kbd {
+      border: 1px solid var(--ink-15);
+      border-radius: 4px;
+      color: var(--ink-35);
+      padding: 1px 4px;
+      font-size: max(11px, calc(9 * var(--u)));
+      line-height: 1;
+    }
+    .currency-pill {
+      padding: 0 calc(10 * var(--u));
+      gap: calc(6 * var(--u));
+      font-family: "DM Mono", ui-monospace, monospace;
+      font-size: max(11px, calc(10.5 * var(--u)));
+    }
+    .icon-btn {
+      position: relative;
+      width: max(24px, calc(26 * var(--u)));
+      height: max(24px, calc(26 * var(--u)));
+      display: inline-grid;
+      place-items: center;
+      border-radius: 999px;
+      color: var(--ink);
+    }
+    .icon-btn svg {
+      width: calc(18 * var(--u));
+      height: calc(18 * var(--u));
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 1.6;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .badge {
+      position: absolute;
+      right: -4px;
+      top: -4px;
+      min-width: 16px;
+      height: 16px;
+      padding: 0 4px;
+      border-radius: 999px;
+      background: var(--ink);
+      color: var(--wall);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font: 500 10px/1 "DM Mono", ui-monospace, monospace;
+    }
+    .badge.show { display: inline-flex; }
+
+    #gallery {
+      position: fixed;
+      inset: 0;
+      touch-action: none;
+      cursor: grab;
+      z-index: 1;
+    }
+    #gallery.dragging { cursor: grabbing; }
+    #gallery canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      transition: opacity .3s ease;
+    }
+    #veil {
+      position: absolute;
+      inset: 0;
+      background: var(--wall);
+      pointer-events: none;
+    }
+
+    .gui {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      pointer-events: none;
+      transition: opacity .3s ease, visibility .3s step-end;
+    }
+    .gui > * { pointer-events: auto; }
+    .gui.hidden {
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    .arrows {
+      position: absolute;
+      left: calc(27 * var(--u));
+      top: calc(262 * var(--u));
+      display: flex;
+      flex-direction: column;
+      gap: calc(10 * var(--u));
+    }
+    .arrow-btn {
+      width: calc(50 * var(--u));
+      height: calc(50 * var(--u));
+      border-radius: 999px;
+      border: 1.5px solid var(--ink);
+      display: grid;
+      place-items: center;
+      transition: background .25s ease, color .25s ease;
+    }
+    .arrow-btn:hover {
+      background: var(--ink);
+      color: var(--wall);
+    }
+    .arrow-btn span {
+      font-size: calc(20 * var(--u));
+      line-height: 1;
+      transform: translateY(-1px);
+    }
+
+    .hint {
+      position: absolute;
+      right: calc(27 * var(--u));
+      bottom: calc(229 * var(--u));
+      text-align: right;
+      font-family: "DM Mono", ui-monospace, monospace;
+      font-size: max(11px, calc(10 * var(--u)));
+      letter-spacing: .12em;
+      line-height: 1.65;
+      text-transform: uppercase;
+    }
+
+    .view-toggle {
+      position: absolute;
+      right: calc(29 * var(--u));
+      bottom: calc(174 * var(--u));
+      padding: calc(2 * var(--u));
+      gap: calc(2 * var(--u));
+      border: 1px solid var(--ink-35);
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+    }
+    .toggle-btn {
+      min-width: max(24px, calc(22 * var(--u)));
+      height: calc(22 * var(--u));
+      padding: 0 calc(14 * var(--u));
+      border-radius: 999px;
+      font-family: "DM Mono", ui-monospace, monospace;
+      font-size: max(11px, calc(9.5 * var(--u)));
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      transition: background .2s ease, color .2s ease;
+    }
+    .toggle-btn.active {
+      background: var(--ink);
+      color: var(--wall);
+    }
+
+    .caption {
+      position: absolute;
+      left: calc(25 * var(--u));
+      bottom: calc(30 * var(--u));
+    }
+    .kicker {
+      display: inline-block;
+      margin: 0 0 calc(10 * var(--u)) calc(3 * var(--u));
+      width: max-content;
+      font-family: "DM Mono", ui-monospace, monospace;
+      font-size: max(11px, calc(11.5 * var(--u)));
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+    .headline-row {
+      position: relative;
+      min-height: calc(150 * var(--u));
+    }
+    .headline {
+      margin: 0;
+      white-space: nowrap;
+      font-family: "Oswald", "Arial Narrow", sans-serif;
+      font-weight: 600;
+      font-size: calc(170 * var(--u));
+      line-height: .82;
+      letter-spacing: .005em;
+      transform: scaleX(.855);
+      transform-origin: bottom left;
+      text-transform: uppercase;
+    }
+    .caption-link {
+      position: absolute;
+      left: calc(946 * var(--u));
+      bottom: 0;
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      margin-bottom: calc(9 * var(--u));
+      padding-bottom: calc(2 * var(--u));
+      border-bottom: 1px solid var(--ink);
+      font-family: "DM Mono", ui-monospace, monospace;
+      font-size: max(11px, calc(11 * var(--u)));
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .open-pill {
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 21;
+      transform: translate(-50%, -50%);
+      padding: calc(7 * var(--u)) calc(13 * var(--u));
+      border-radius: 999px;
+      background: #1e1b2b;
+      color: #fff;
+      font-family: "DM Mono", ui-monospace, monospace;
+      font-size: max(11px, calc(10 * var(--u)));
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity .12s ease;
+      white-space: nowrap;
+    }
+    .open-pill.show { opacity: 1; }
+
+    .panel {
+      position: fixed;
+      inset: 0;
+      background: var(--page);
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity .3s ease, visibility .3s step-end;
+      overflow: auto;
+      overscroll-behavior: contain;
+    }
+    .panel.open {
+      opacity: 1;
+      visibility: visible;
+      transition: opacity .3s ease;
+    }
+
+    #page {
+      z-index: 15;
+    }
+    .page-wrap {
+      display: grid;
+      grid-template-columns: calc(712 * var(--w)) calc(638 * var(--w));
+      padding-top: calc(96 * var(--w));
+      min-height: 100%;
+    }
+    .page-left {
+      width: calc(544 * var(--w));
+      padding-left: calc(184 * var(--w));
+      position: sticky;
+      top: calc(96 * var(--w));
+      align-self: start;
+    }
+    .page-art-shell {
+      width: calc(360 * var(--w));
+    }
+    .page-art {
+      width: calc(360 * var(--w));
+      aspect-ratio: 3 / 4.08;
+      background-color: #f1e4cf;
+      box-shadow: 0 0 0 calc(10 * var(--w)) #F6EAD8, 0 calc(2 * var(--w)) calc(10 * var(--w)) calc(10 * var(--w)) rgba(58,53,80,.06);
+    }
+    .page-art.hidden-real {
+      visibility: hidden;
+    }
+    .page-meta {
+      width: calc(360 * var(--w));
+      margin-top: calc(34 * var(--w));
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: calc(16 * var(--w));
+      font-family: "DM Mono", ui-monospace, monospace;
+      font-size: max(11px, calc(11 * var(--w)));
+      opacity: 0;
+      transition: opacity .15s ease;
+    }
+    .page-meta.show,
+    .page-side.show,
+    .collection-band.show { opacity: 1; }
+    .meta-room,
+    .meta-save {
+      display: inline-flex;
+      align-items: center;
+      gap: calc(7 * var(--w));
+    }
+    .meta-room svg,
+    .meta-save svg {
+      width: calc(17 * var(--w));
+      height: calc(17 * var(--w));
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 1.4;
+    }
+    .page-side {
+      opacity: 0;
+      transition: opacity .15s ease;
+      padding-right: calc(54 * var(--w));
+    }
+    .page-artist {
+      margin: 0 0 calc(6 * var(--w));
+      font: italic 400 calc(19 * var(--w)) / 1.1 "Newsreader", Georgia, serif;
+    }
+    .page-title {
+      margin: 0 0 calc(20 * var(--w));
+      font-family: "Oswald", "Arial Narrow", sans-serif;
+      font-weight: 600;
+      font-size: calc(46 * var(--w));
+      line-height: 1;
+      text-transform: uppercase;
+    }
+    .page-desc {
+      margin: 0 0 calc(24 * var(--w));
+      max-width: calc(560 * var(--w));
+      color: var(--ink-60);
+      font-size: max(11px, calc(14.5 * var(--w)));
+      line-height: 1.55;
+    }
+    .page-price {
+      margin: 0 0 calc(24 * var(--w));
+      font-family: "DM Mono", ui-monospace, monospace;
+      font-size: max(11px, calc(15 * var(--w)));
+    }
+    .tax-line {
+      margin: 0 0 calc(24 * var(--w));
+      color: var(--ink-60);
+      font-family: "DM Mono", ui-monospace, monospace;
+      font-size: max(11px, calc(10 * var(--w)));
+    }
+    .option-group {
+      margin-bottom: calc(21 * var(--w));
+    }
+    .option-label {
+      margin-bottom: calc(10 * var(--w));
+      display: flex;
+      gap: calc(8 * var(--w));
+      align-items: baseline;
+      font-family: "DM Mono", ui-monospace, monospace;
+      font-size: max(11px, calc(10 * var(--w)));
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+    .option-current {
+      color: var(--ink-60);
+      letter-spacing: 0;
+      text-transform: none;
+    }
+    .chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: calc(13 * var(--w));
+    }
+    .chip {
+      min-height: max(28px, calc(32 * var(--w)));
+      padding: 0 calc(14 * var(--w));
+      border: 1px solid var(--ink-35);
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-family: "DM Mono", ui-monospace, monospace;
+      font-size: max(11px, calc(10.5 * var(--w)));
+      white-space: nowrap;
+      transition: background .2s ease, border-color .2s ease;
+    }
+    .chip.selected {
+      background: var(--chip-on);
+      border-color: var(--ink);
+    }
+    .frame-chip {
+      width: calc(121 * var(--w));
+      height: calc(126 * var(--w));
+      padding: calc(12 * var(--w));
+      border-radius: calc(18 * var(--w));
+      border: 1px solid var(--ink-15);
+      background: rgba(255,255,255,.35);
+      display: grid;
+      place-items: center;
+      position: relative;
+    }
+    .frame-chip .thumb {
+      width: calc(38 * var(--w));
+      aspect-ratio: 567 / 763;
+      background-color: #f0e6d8;
+    }
+    .frame-chip.classic .thumb { box-shadow: 0 0 0 calc(4 * var(--w)) #C99A63; }
+    .frame-chip.canvas .thumb { box-shadow: 0 0 0 calc(5 * var(--w)) #1d1b24; }
+    .frame-chip .label {
+      position: absolute;
+      left: 50%;
+      bottom: calc(11 * var(--w));
+      transform: translateX(-50%);
+      font-family: "DM Mono", ui-monospace, monospace;
+      font-size: max(11px, calc(9.5 * var(--w)));
+      white-space: nowrap;
+    }
+    .buy-row {
+      margin-top: calc(42 * var(--w));
+      display: flex;
+      gap: calc(26 * var(--w));
+      align-items: center;
+    }
+    .qty {
+      width: calc(100 * var(--w));
+      height: calc(50 * var(--w));
+      border: 1px solid var(--ink-35);
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 calc(16 * var(--w));
+      font-family: "DM Mono", ui-monospace, monospace;
+      font-size: max(11px, calc(13 * var(--w)));
+    }
+    .qty button,
+    .drawer-stepper button {
+      width: max(24px, calc(24 * var(--w)));
+      height: max(24px, calc(24 * var(--w)));
+      display: grid;
+      place-items: center;
+    }
+    .add-btn,
+    .checkout-btn {
+      min-height: calc(50 * var(--w));
+      border-radius: 999px;
+      background: var(--ink);
+      color: #fff;
+      font-family: "Oswald", "Arial Narrow", sans-serif;
+      font-weight: 500;
+      font-size: calc(16 * var(--w));
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      padding: 0 calc(28 * var(--w));
+      transition: background .2s ease;
+    }
+    .add-btn:hover,
+    .checkout-btn:hover { background: #2a2640; }
+    .add-btn { flex: 1; }
+
+    .accordion {
+      margin-top: calc(36 * var(--w));
+      border-top: 1px solid var(--ink-35);
+    }
+    .acc-item {
+      border-bottom: 1px solid var(--ink-35);
+    }
+    .acc-head {
+      min-height: max(32px, calc(40 * var(--w)));
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      font-size: calc(15 * var(--w));
+      text-align: left;
+      padding: 0;
+    }
+    .acc-head span:last-child {
+      font-family: "DM Mono", ui-monospace, monospace;
+      transition: transform .3s ease;
+    }
+    .acc-item.open .acc-head span:last-child {
+      transform: rotate(45deg);
+    }
+    .acc-body {
+      height: 0;
+      overflow: hidden;
+      transition: height .3s ease;
+    }
+    .acc-body-inner {
+      padding: 0 0 calc(16 * var(--w));
+      color: var(--ink-60);
+      font-size: max(11px, calc(13.5 * var(--w)));
+      line-height: 1.5;
+    }
+
+    .collection-band {
+      opacity: 0;
+      transition: opacity .15s ease;
+      margin-top: calc(70 * var(--w));
+      background: #FBF3E4;
+      padding: calc(36 * var(--w)) 0 calc(80 * var(--w)) calc(48 * var(--w));
+    }
+    .collection-title {
+      margin: 0 0 calc(24 * var(--w));
+      transform: translateY(calc(-15 * var(--w)));
+      font-family: "Oswald", "Arial Narrow", sans-serif;
+      font-weight: 600;
+      font-size: calc(38 * var(--w));
+      text-transform: uppercase;
+    }
+    .collection-row {
+      display: flex;
+      gap: calc(87 * var(--w));
+    }
+    .collection-card,
+    .list-card {
+      width: calc(168 * var(--w));
+    }
+    .collection-art,
+    .list-art,
+    .drawer-art,
+    .flyer,
+    .frame-thumb,
+    .list-thumb {
+      background-repeat: no-repeat;
+      background-color: #f1e4cf;
+    }
+    .collection-art {
+      width: calc(168 * var(--w));
+      aspect-ratio: 3 / 4;
+      box-shadow: 0 0 0 calc(7 * var(--w)) #F6EAD8;
+      transition: transform .35s cubic-bezier(.2,.7,.2,1);
+    }
+    .collection-card:hover .collection-art { transform: translateY(calc(-4 * var(--w))); }
+    .card-title,
+    .list-title {
+      margin-top: calc(18 * var(--w));
+      font-size: calc(14 * var(--w));
+      font-weight: 500;
+    }
+    .card-artist,
+    .list-artist {
+      margin-top: calc(5 * var(--w));
+      font-style: italic;
+      font-size: calc(13.5 * var(--w));
+    }
+    .card-price,
+    .list-price {
+      margin-top: calc(7 * var(--w));
+      font-family: "DM Mono", ui-monospace, monospace;
+      font-size: max(11px, calc(11 * var(--w)));
+    }
+
+    #list {
+      z-index: 14;
+      padding: calc(110 * var(--w)) calc(48 * var(--w)) calc(80 * var(--w));
+    }
+    .list-title-main {
+      margin: 0 0 calc(44 * var(--w));
+      font-family: "Oswald", "Arial Narrow", sans-serif;
+      font-size: calc(38 * var(--w));
+      text-transform: uppercase;
+    }
+    .list-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: calc(24 * var(--w)) calc(30 * var(--w));
+      row-gap: calc(46 * var(--w));
+    }
+    .list-card {
+      width: auto;
+      cursor: pointer;
+    }
+    .list-art {
+      width: 100%;
+      aspect-ratio: 3 / 4;
+      box-shadow: 0 0 0 calc(8 * var(--w)) #F6EAD8;
+    }
+
+    .drawer {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: calc(387 * var(--w));
+      height: 100%;
+      z-index: 40;
+      background: var(--drawer);
+      padding: calc(28 * var(--w)) calc(28 * var(--w)) calc(28 * var(--w)) calc(32 * var(--w));
+      display: flex;
+      flex-direction: column;
+      transform: translateX(101%);
+      transition: transform .45s cubic-bezier(.1,.85,.2,1);
+    }
+    .drawer.open { transform: translateX(0); }
+    .drawer-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: calc(28 * var(--w));
+    }
+    .drawer-title {
+      margin: 0;
+      font-family: "Oswald", "Arial Narrow", sans-serif;
+      font-weight: 600;
+      font-size: calc(26 * var(--w));
+      text-transform: uppercase;
+    }
+    .drawer-close {
+      font-size: calc(26 * var(--w));
+      line-height: 1;
+    }
+    .drawer-items {
+      flex: 1;
+      overflow: auto;
+      padding-right: calc(4 * var(--w));
+    }
+    .drawer-empty {
+      padding-top: calc(120 * var(--w));
+      text-align: center;
+      font-family: "DM Mono", ui-monospace, monospace;
+      font-size: max(11px, calc(11 * var(--w)));
+      letter-spacing: .12em;
+    }
+    .drawer-item {
+      display: grid;
+      grid-template-columns: calc(66 * var(--w)) minmax(0,1fr);
+      gap: calc(16 * var(--w));
+      margin-bottom: calc(20 * var(--w));
+      opacity: 0;
+      transform: translateY(calc(6 * var(--w)));
+      transition: opacity .25s ease, transform .25s ease;
+    }
+    .drawer-item.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .drawer-art {
+      width: calc(66 * var(--w));
+      aspect-ratio: 3 / 4;
+      box-shadow: 0 0 0 calc(5 * var(--w)) #F6EAD8;
+    }
+    .drawer-item-title { font-size: calc(14 * var(--w)); }
+    .drawer-item-artist {
+      margin-top: calc(3 * var(--w));
+      font-size: calc(13 * var(--w));
+      font-style: italic;
+    }
+    .drawer-item-size,
+    .drawer-item-price,
+    .drawer-item-options {
+      margin-top: calc(5 * var(--w));
+      font-family: "DM Mono", ui-monospace, monospace;
+      font-size: max(11px, calc(11 * var(--w)));
+    }
+    .drawer-item-options {
+      color: var(--ink-60);
+      line-height: 1.45;
+      white-space: pre-line;
+    }
+    .drawer-controls {
+      margin-top: calc(10 * var(--w));
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: calc(10 * var(--w));
+    }
+    .drawer-stepper {
+      border: 1px solid var(--ink-35);
+      border-radius: 999px;
+      height: calc(34 * var(--w));
+      padding: 0 calc(8 * var(--w));
+      display: inline-flex;
+      align-items: center;
+      gap: calc(6 * var(--w));
+      font-family: "DM Mono", ui-monospace, monospace;
+      font-size: max(11px, calc(11 * var(--w)));
+    }
+    .trash-btn {
+      width: max(24px, calc(24 * var(--w)));
+      height: max(24px, calc(24 * var(--w)));
+    }
+    .trash-btn svg {
+      width: 100%;
+      height: 100%;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 1.6;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .drawer-foot {
+      border-top: 1px solid var(--ink-35);
+      padding-top: calc(18 * var(--w));
+    }
+    .subtotal {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: calc(18 * var(--w));
+      font-family: "DM Mono", ui-monospace, monospace;
+      font-size: max(11px, calc(12 * var(--w)));
+    }
+    .checkout-btn {
+      width: 100%;
+      font-size: calc(17 * var(--w));
+    }
+
+    .flyer {
+      position: fixed;
+      z-index: 41;
+      left: 0;
+      top: 0;
+      pointer-events: none;
+      box-shadow: 0 0 0 8px #F6EAD8;
+    }
+
+    @media (max-width: 819px), (orientation: portrait) and (max-width: 1100px), (orientation: landscape) and (max-height: 500px) {
+      .nav {
+        height: 52px;
+        padding: 0 16px;
+      }
+      .logo { font-size: 19px; margin-right: 0; }
+      .nav-links,
+      .pill-field,
+      .currency-pill,
+      .icon-btn.account,
+      .icon-btn.heart { display: none; }
+      .icon-btn.bag {
+        width: 32px;
+        height: 32px;
+      }
+      .icon-btn.bag svg {
+        width: 20px;
+        height: 20px;
+      }
+      .hint {
+        top: 62px;
+        left: 16px;
+        right: 16px;
+        bottom: auto;
+        text-align: left;
+        font-size: 11px;
+      }
+      .caption {
+        left: 14px;
+        bottom: 100px;
+        right: 14px;
+      }
+      .kicker { font-size: 11px; margin-left: 0; }
+      .headline-row { min-height: auto; }
+      .headline {
+        white-space: normal;
+        font-size: min(23.5vw, 19vh);
+      }
+      .caption-link {
+        position: static;
+        margin-top: 12px;
+        margin-bottom: 0;
+      }
+      .arrows {
+        left: 16px;
+        bottom: 24px;
+        top: auto;
+        flex-direction: row;
+      }
+      .arrow-btn {
+        width: 44px;
+        height: 44px;
+      }
+      .view-toggle {
+        right: 16px;
+        bottom: 30px;
+      }
+      .toggle-btn {
+        height: 26px;
+        padding: 0 12px;
+      }
+      .open-pill {
+        transform: translate(-50%, -50%);
+      }
+      .page-wrap {
+        grid-template-columns: 1fr;
+        padding-top: 64px;
+        max-width: 680px;
+        margin: 0 auto;
+        padding-left: 20px;
+        padding-right: 20px;
+      }
+      .page-left {
+        position: static;
+        width: 100%;
+        padding-left: 0;
+      }
+      .page-art-shell,
+      .page-art {
+        width: min(100%, 420px);
+      }
+      .page-art {
+        box-shadow: 0 0 0 8px #F6EAD8, 0 2px 10px 10px rgba(58,53,80,.06);
+      }
+      .page-side {
+        padding-right: 0;
+        margin-top: 36px;
+      }
+      .page-title { font-size: 36px; }
+      .page-artist { font-size: 18px; }
+      .page-desc { font-size: 14.5px; }
+      .chip {
+        min-height: 36px;
+        font-size: 11px;
+      }
+      .chip-row { gap: 8px; }
+      .frame-chip {
+        width: min(calc((100vw - 60px) / 3), 190px);
+        height: 118px;
+      }
+      .buy-row { flex-wrap: wrap; }
+      .qty {
+        width: 100px;
+        height: 50px;
+      }
+      .add-btn { min-height: 50px; width: 100%; }
+      .acc-head { min-height: 46px; }
+      .collection-band {
+        padding: 30px 0 60px;
+        margin-left: -20px;
+        margin-right: -20px;
+        padding-left: max(20px, calc((100vw - 640px) / 2));
+      }
+      .collection-row {
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        gap: 16px;
+        padding-right: 20px;
+      }
+      .collection-card {
+        width: 150px;
+        flex: 0 0 auto;
+        scroll-snap-align: start;
+      }
+      .collection-art { width: 150px; }
+      #list {
+        padding: 92px 20px 60px;
+      }
+      .list-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .drawer {
+        width: min(88vw, 380px);
+        padding: 22px 20px;
+      }
+    }
+
+    @media (orientation: landscape) and (max-height: 500px) {
+      .headline {
+        white-space: nowrap;
+        font-size: min(13vw, 26vh);
+      }
+      .caption { bottom: 18px; }
+      .hint { display: none; }
+      .arrows {
+        left: auto;
+        right: 16px;
+        bottom: 20px;
+      }
+      .view-toggle {
+        top: 60px;
+        bottom: auto;
+        right: 16px;
+      }
+    }
+
+    @media (min-width: 820px) and (max-aspect-ratio: 1/1) {
+      .headline { font-size: calc(150 * var(--u)); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      /* Reduced motion removes all animation so the experience cuts immediately without transitional movement. */
+      *, *::before, *::after {
+        animation: none !important;
+        transition: none !important;
+        scroll-behavior: auto !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="nav">
+    <button class="logo" data-action="gallery"><span class="nav-item">Zestwell</span></button>
+    <nav class="nav-links">
+      <a href="#" data-action="gallery"><span class="nav-item">Index</span></a>
+      <a href="#" data-action="list"><span class="nav-item">Shop</span></a>
+      <a href="#"><span class="nav-item">Info</span></a>
+      <a href="#"><span class="nav-item">Auctions</span></a>
+      <a href="#"><span class="nav-item">Help</span></a>
+    </nav>
+    <div class="nav-right">
+      <div class="pill-field nav-item">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+        <span>Search…</span>
+        <span class="spacer"></span>
+        <span class="kbd">⌘K</span>
+      </div>
+      <button class="currency-pill nav-item">USD <span>⌄</span></button>
+      <button class="icon-btn account nav-item" aria-label="Account">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"></circle><path d="M5 19c1.8-3 4.2-4.5 7-4.5S17.2 16 19 19"></path></svg>
+      </button>
+      <button class="icon-btn heart nav-item" aria-label="Saved prints">
+        <svg viewBox="0 0 24 24"><path d="M12 20s-7-4.7-7-10a4 4 0 0 1 7-2.4A4 4 0 0 1 19 10c0 5.3-7 10-7 10Z"></path></svg>
+      </button>
+      <button class="icon-btn bag nav-item" aria-label="Open bag" id="bagButton">
+        <svg viewBox="0 0 24 24"><path d="M6 8h12l-1 11H7L6 8Z"></path><path d="M9 9V7a3 3 0 0 1 6 0v2"></path></svg>
+        <span class="badge" id="bagBadge">0</span>
+      </button>
+    </div>
+  </header>
+
+  <main id="gallery">
+    <div id="veil"></div>
+  </main>
+
+  <div class="gui" id="gui">
+    <div class="arrows">
+      <button class="arrow-btn" id="prevBtn" aria-label="Previous print"><span>←</span></button>
+      <button class="arrow-btn" id="nextBtn" aria-label="Next print"><span>→</span></button>
+    </div>
+
+    <div class="hint" id="hint">
+      <div class="mask-line"><span id="hintLine1">Scroll or drag to walk round</span></div><br />
+      <div class="mask-line"><span id="hintLine2">Click a painting to look closer</span></div>
+    </div>
+
+    <div class="view-toggle">
+      <button class="toggle-btn active" id="galleryToggle">Gallery</button>
+      <button class="toggle-btn" id="listToggle">List</button>
+    </div>
+
+    <div class="caption">
+      <div class="kicker mask-line"><span>YOU ARE WALKING PAST</span></div>
+      <div class="headline-row">
+        <h1 class="headline mask-line"><span id="headlineText">CITRUS SEASON</span></h1>
+        <button class="caption-link mask-line" id="enterCollection"><span>ENTER THE COLLECTION →</span></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="open-pill" id="openPill">OPEN THE PRINT</div>
+
+  <section class="panel" id="page">
+    <div class="page-wrap">
+      <div class="page-left">
+        <div class="page-art-shell">
+          <div class="page-art hidden-real" id="pageArt"></div>
+          <div class="page-meta" id="pageMeta">
+            <div>1/1</div>
+            <button class="meta-room" id="viewInRoom">
+              <svg viewBox="0 0 24 24"><path d="M4 7.5 12 4l8 3.5v9L12 20l-8-3.5v-9Z"></path><path d="M12 4v16"></path><path d="m4 7.5 8 4 8-4"></path></svg>
+              <span>View in room</span>
+            </button>
+            <button class="meta-save">
+              <svg viewBox="0 0 24 24"><path d="M6 4h12v16l-6-4-6 4V4Z"></path></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="page-side" id="pageSide">
+        <p class="page-artist" id="pageArtist"></p>
+        <h2 class="page-title" id="pageTitle"></h2>
+        <p class="page-desc" id="pageDesc"></p>
+        <p class="page-price" id="pagePrice"></p>
+        <p class="tax-line">Prices include VAT. Shipping calculated at checkout.</p>
+
+        <div class="option-group" data-group="paper">
+          <div class="option-label"><span>PAPER</span><span class="option-current" id="paperCurrent"></span></div>
+          <div class="chip-row" id="paperChips"></div>
+        </div>
+        <div class="option-group" data-group="size">
+          <div class="option-label"><span>SIZE</span><span class="option-current" id="sizeCurrent"></span></div>
+          <div class="chip-row" id="sizeChips"></div>
+        </div>
+        <div class="option-group" data-group="signature">
+          <div class="option-label"><span>SIGNATURE</span><span class="option-current" id="signatureCurrent"></span></div>
+          <div class="chip-row" id="signatureChips"></div>
+        </div>
+        <div class="option-group" data-group="frame">
+          <div class="option-label"><span>FRAME</span><span class="option-current" id="frameCurrent"></span></div>
+          <div class="chip-row" id="frameChips"></div>
+        </div>
+
+        <div class="buy-row">
+          <div class="qty">
+            <button id="qtyDown" aria-label="Decrease quantity">−</button>
+            <span id="qtyValue">1</span>
+            <button id="qtyUp" aria-label="Increase quantity">+</button>
+          </div>
+          <button class="add-btn" id="addToBag">Add to bag</button>
+        </div>
+
+        <div class="accordion" id="accordion"></div>
+      </div>
+    </div>
+    <div class="collection-band" id="collectionBand">
+      <h3 class="collection-title">GET THE COLLECTION</h3>
+      <div class="collection-row" id="collectionRow"></div>
+    </div>
+  </section>
+
+  <section class="panel" id="list">
+    <h2 class="list-title-main">CITRUS SEASON — ALL PRINTS</h2>
+    <div class="list-grid" id="listGrid"></div>
+  </section>
+
+  <aside class="drawer" id="drawer">
+    <div class="drawer-head">
+      <h2 class="drawer-title">YOUR BAG</h2>
+      <button class="drawer-close" id="drawerClose" aria-label="Close bag">×</button>
+    </div>
+    <div class="drawer-items" id="drawerItems"></div>
+    <div class="drawer-foot">
+      <div class="subtotal"><span>Subtotal</span><span id="subtotalValue">$ 0.00</span></div>
+      <button class="checkout-btn">Checkout →</button>
+    </div>
+  </aside>
+
+  <script type="module">
+    import * as THREE from 'three';
+
+    const ART_URL = 'https://images.higgs.ai/?default=1&output=webp&url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20261120_071134_02d2d6ba-ed91-4c3f-87c4-1354b61b5882.png&w=1744&q=85';
+    const SHEET_W = 1744;
+    const SHEET_H = 2336;
+    const PW = 1.36;
+    const PH = 1.36 * 763 / 567;
+    const PY = 1.95;
+    const STEP = Math.PI * 2 / 36;
+    const SMALL_QUERY = '(max-width: 819px), (orientation: portrait) and (max-width: 1100px), (orientation: landscape) and (max-height: 500px)';
+    const mmSmall = window.matchMedia(SMALL_QUERY);
+    const mmReduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+    const prints = [
+      { title: 'Lemons on Gingham', artist: 'Tova Lindqvist', year: 2024, price: 60, descStart: 'A sunny tabletop of lemons, a striped jug and blue gingham' },
+      { title: 'Oranges & Stripe', artist: 'Elise Marten', year: 2024, price: 60, descStart: 'A striped bowl heaped with oranges on a candy-stripe cloth' },
+      { title: 'Pink Blooms', artist: 'Soren Vale', year: 2023, price: 55, descStart: 'Pink garden flowers in a cobalt striped jug against warm yellow' },
+      { title: 'Citrus Jug', artist: 'Nora Feldt', year: 2024, price: 60, descStart: 'Leafy lemon branches in a striped jug on a sunlit table' },
+      { title: 'Teacup & Lemon', artist: 'Ada Kerrow', year: 2023, price: 50, descStart: 'A blue-patterned teacup with a slice of lemon, all morning light' },
+      { title: 'Blood Orange Bowl', artist: 'Pim Halden', year: 2024, price: 60, descStart: 'Halved blood oranges glowing in a white bowl on deep blue' },
+      { title: 'Lemon Tree, Window', artist: 'Ines Morrow', year: 2022, price: 65, descStart: 'A potted lemon tree by an open window on a gingham table' },
+      { title: 'Grapefruit Halves', artist: 'Juno Basset', year: 2024, price: 55, descStart: 'Pink grapefruit halves on a hand-painted checked plate' },
+      { title: 'Daisies in Stripes', artist: 'Wren Calloway', year: 2023, price: 55, descStart: 'White daisies in a tall striped pitcher against blush pink' }
+    ].map((item, index) => ({ ...item, index, description: item.descStart + ', painted in flat gouache tones. Printed on archival paper with a soft matte finish.' }));
+
+    const options = {
+      paper: ['Art Paper', 'Fine Art Paper', 'Recycled Paper'],
+      size: ['11.7 × 16.5" (A3)', '16.5 × 23.4" (A2)', '23.4 × 33.1" (A1)', '33.1 × 46.8" (A0)'],
+      signature: ['Unsigned', 'Signed and Numbered'],
+      frame: ['Unframed', 'Classic Frame', 'Framed Canvas']
+    };
+
+    const accordions = [
+      ['Paper & Sizes', 'Art Paper is a smooth 200 gsm matte stock. Fine Art Paper is a 310 gsm cotton rag with a soft texture. Recycled Paper is 100% post-consumer fibre.'],
+      ['Delivery Info', 'Prints are made to order and ship rolled in a tube within 3–5 working days. Framed pieces ship flat within 7–10 working days.'],
+      ['Returns Policy', 'Unframed prints can be returned within 30 days in their original tube. Signed editions are final sale.']
+    ];
+
+    const cropBounds = (() => {
+      const cols = [[0, 575], [585, 1158], [1168, 1743]];
+      const rows = [[0, 769], [779, 1545], [1555, 2335]];
+      return prints.map((_, i) => {
+        const col = i % 3;
+        const row = Math.floor(i / 3);
+        const [x0, x1] = cols[col];
+        const [y0, y1] = rows[row];
+        return { x: x0 + 6, y: y0 + 6, w: x1 - x0 - 12, h: y1 - y0 - 12 };
+      });
+    })();
+
+    const state = {
+      small: mmSmall.matches,
+      reduced: mmReduced.matches,
+      currentPrint: 0,
+      focusedPrintRef: null,
+      targetTh: 0,
+      walkOffset: 0,
+      pointer: new THREE.Vector2(),
+      hoverRef: null,
+      hoverPoint: { x: 0, y: 0 },
+      mode: 'gallery',
+      detailDelay: 1000,
+      bagDelay: 750,
+      pageFlyer: null,
+      bag: [],
+      quantity: 1,
+      selections: {
+        paper: options.paper[0],
+        size: options.size[1],
+        signature: options.signature[0],
+        frame: options.frame[0]
+      }
+    };
+
+    const page = document.getElementById('page');
+    const list = document.getElementById('list');
+    const drawer = document.getElementById('drawer');
+    const drawerItems = document.getElementById('drawerItems');
+    const subtotalValue = document.getElementById('subtotalValue');
+    const bagBadge = document.getElementById('bagBadge');
+    const gui = document.getElementById('gui');
+    const openPill = document.getElementById('openPill');
+    const hintLine1 = document.getElementById('hintLine1');
+    const hintLine2 = document.getElementById('hintLine2');
+    const pageArt = document.getElementById('pageArt');
+    const pageTitle = document.getElementById('pageTitle');
+    const pageArtist = document.getElementById('pageArtist');
+    const pageDesc = document.getElementById('pageDesc');
+    const pagePrice = document.getElementById('pagePrice');
+    const pageMeta = document.getElementById('pageMeta');
+    const pageSide = document.getElementById('pageSide');
+    const collectionBand = document.getElementById('collectionBand');
+    const collectionRow = document.getElementById('collectionRow');
+    const listGrid = document.getElementById('listGrid');
+    const gallery = document.getElementById('gallery');
+    const veil = document.getElementById('veil');
+
+    const introMaskItems = Array.from(document.querySelectorAll('.mask-line > span'));
+    const navIntroItems = Array.from(document.querySelectorAll('.nav-item'));
+
+    function iconCube() {
+      return '<svg viewBox="0 0 24 24"><path d="M4 7.5 12 4l8 3.5v9L12 20l-8-3.5v-9Z"></path><path d="M12 4v16"></path><path d="m4 7.5 8 4 8-4"></path></svg>';
+    }
+
+    function iconBookmark() {
+      return '<svg viewBox="0 0 24 24"><path d="M6 4h12v16l-6-4-6 4V4Z"></path></svg>';
+    }
+
+    function iconTrash() {
+      return '<svg viewBox="0 0 24 24"><path d="M5 7h14"></path><path d="M9 7V5h6v2"></path><path d="M8 7l1 12h6l1-12"></path></svg>';
+    }
+
+    function isSmall() {
+      return mmSmall.matches;
+    }
+
+    function reducedDuration(ms) {
+      return state.reduced ? 0 : ms;
+    }
+
+    function updateResponsiveState() {
+      state.small = mmSmall.matches;
+      state.reduced = mmReduced.matches;
+      state.walkOffset = state.small ? 0.14 + 0.9 * STEP : 0.14;
+      state.detailDelay = state.reduced ? 0 : 1000;
+      state.bagDelay = state.reduced ? 0 : 750;
+    }
+
+    updateResponsiveState();
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.NoToneMapping;
+    gallery.prepend(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color('#FFF9EC');
+    scene.fog = new THREE.Fog('#FFF9EC', 10, 46);
+    scene.add(new THREE.HemisphereLight(0xfffdf6, 0xe9cfa6, 1.55));
+    scene.add(new THREE.AmbientLight(0xfff6e6, 0.55));
+
+    const camera = new THREE.PerspectiveCamera(56, 1, 0.05, 100);
+    const clock = new THREE.Clock();
+    const raycaster = new THREE.Raycaster();
+
+    const world = {
+      walk: { th: state.walkOffset, r: 15.6, yaw: -0.30, y: 1.92, pitch: -0.12 },
+      pose: { th: state.walkOffset, r: 15.6, yaw: -0.30, y: 1.92, pitch: -0.12 },
+      focusTarget: null,
+      introStart: null,
+      glide: null,
+      printObjects: []
+    };
+
+    state.targetTh = world.walk.th;
+
+    function setWalkPoseByViewport() {
+      world.walk = state.small
+        ? { th: state.targetTh || state.walkOffset, r: 15.4, yaw: -0.42, y: 1.90, pitch: -0.10 }
+        : { th: state.targetTh || state.walkOffset, r: 15.6, yaw: -0.30, y: 1.92, pitch: -0.12 };
+      if (!world.glide && state.mode === 'gallery' && !state.focusedPrintRef) {
+        world.pose.r = world.walk.r;
+        world.pose.yaw = world.walk.yaw;
+        world.pose.y = world.walk.y;
+        world.pose.pitch = world.walk.pitch;
+      }
+    }
+
+    setWalkPoseByViewport();
+
+    function gradientTexture(width, height, stops, horizontal = false) {
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      const gradient = horizontal
+        ? ctx.createLinearGradient(0, 0, width, 0)
+        : ctx.createLinearGradient(0, 0, 0, height);
+      stops.forEach(([stop, color]) => gradient.addColorStop(stop, color));
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, width, height);
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.wrapS = THREE.ClampToEdgeWrapping;
+      texture.wrapT = THREE.ClampToEdgeWrapping;
+      return texture;
+    }
+
+    function radialTexture(size, innerAlpha, innerStop, color, outerAlpha = 0) {
+      const canvas = document.createElement('canvas');
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      const g = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+      g.addColorStop(0, `rgba(${color[0]},${color[1]},${color[2]},${innerAlpha})`);
+      g.addColorStop(innerStop, `rgba(${color[0]},${color[1]},${color[2]},${innerAlpha})`);
+      g.addColorStop(1, `rgba(${color[0]},${color[1]},${color[2]},${outerAlpha})`);
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, size, size);
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      return texture;
+    }
+
+    function makeFloorTexture() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 1024;
+      canvas.height = 1024;
+      const ctx = canvas.getContext('2d');
+      const inner = 512 * 12.2 / 18;
+      const g = ctx.createRadialGradient(512, 512, inner, 512, 512, 512);
+      g.addColorStop(0, '#EDD6B0');
+      g.addColorStop(.55, '#F3E1C3');
+      g.addColorStop(1, '#EFDAB8');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, 1024, 1024);
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      return texture;
+    }
+
+    function labelTextureFor(print) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 640;
+      canvas.height = 260;
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, 640, 260);
+      ctx.fillStyle = '#3A3550';
+      ctx.font = '500 58px "Newsreader", Georgia, serif';
+      ctx.fillText(print.artist, 30, 82);
+      ctx.font = 'italic 400 54px "Newsreader", Georgia, serif';
+      ctx.fillText(print.title, 30, 150);
+      ctx.fillStyle = 'rgba(58,53,80,.7)';
+      ctx.font = '400 30px "DM Mono", ui-monospace, monospace';
+      ctx.fillText(`${print.year} · PRINT`, 30, 215);
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.transparent = true;
+      return texture;
+    }
+
+    const roomOuterTexture = gradientTexture(4, 256, [[0, '#F5EBD8'], [.2, '#FBF3E3'], [.6, '#FBF3E3'], [.86, '#F8EDD9'], [1, '#EFDFC4']]);
+    const roomInnerTexture = gradientTexture(4, 256, [[0, '#F7EEDD'], [.3, '#FFFAF0'], [.8, '#FDF5E6'], [1, '#F1E1C6']]);
+    const floorTexture = makeFloorTexture();
+    const haloTexture = radialTexture(256, .95, .35, [255,255,255], 0);
+    const shadowTexture = radialTexture(256, .28, .25, [120,90,50], 0);
+
+    scene.add(
+      new THREE.Mesh(
+        new THREE.CylinderGeometry(18, 18, 6.2, 160, 1, true),
+        new THREE.MeshBasicMaterial({ map: roomOuterTexture, side: THREE.BackSide, fog: true })
+      )
+    );
+    scene.children.at(-1).position.y = 3.1;
+
+    scene.add(
+      new THREE.Mesh(
+        new THREE.CylinderGeometry(12.2, 12.2, 6.2, 120, 1, true),
+        new THREE.MeshBasicMaterial({ map: roomInnerTexture, side: THREE.FrontSide, fog: true })
+      )
+    );
+    scene.children.at(-1).position.y = 3.1;
+
+    const floor = new THREE.Mesh(
+      new THREE.CircleGeometry(18, 160),
+      new THREE.MeshBasicMaterial({ map: floorTexture, fog: true })
+    );
+    floor.rotation.x = -Math.PI / 2;
+    scene.add(floor);
+
+    const ceiling = new THREE.Mesh(
+      new THREE.CircleGeometry(18, 160),
+      new THREE.MeshBasicMaterial({ color: '#FAF1E0', side: THREE.BackSide, fog: true })
+    );
+    ceiling.rotation.x = -Math.PI / 2;
+    ceiling.position.y = 6.2;
+    scene.add(ceiling);
+
+    const loader = new THREE.TextureLoader();
+    loader.setCrossOrigin('anonymous');
+
+    // The gallery keeps working with a painted fallback sheet so the rest of the experience still verifies if the remote art fails. 
+    function makeFallbackArtTexture() {
+      const canvas = document.createElement('canvas');
+      canvas.width = SHEET_W;
+      canvas.height = SHEET_H;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(0, 0, SHEET_W, SHEET_H);
+      const palettes = [
+        ['#f4d95e', '#8ea9db', '#f7efe1'],
+        ['#f59a3d', '#d84f62', '#f6e7d7'],
+        ['#f5a4bd', '#4667b7', '#f0d86f'],
+        ['#c7df72', '#6d9bd1', '#f4dd79'],
+        ['#95b8d1', '#f5d86f', '#fbf5eb'],
+        ['#ba3e47', '#234b8f', '#f7f1e8'],
+        ['#98be5b', '#d9ebf5', '#ead28b'],
+        ['#f498af', '#ece7d1', '#d85f6e'],
+        ['#f7d8da', '#758fcb', '#f6f1e9']
+      ];
+      cropBounds.forEach((crop, index) => {
+        const [a, b, c] = palettes[index];
+        const cx = crop.x;
+        const cy = crop.y;
+        ctx.fillStyle = c;
+        ctx.fillRect(cx, cy, crop.w, crop.h);
+        ctx.fillStyle = a;
+        ctx.fillRect(cx + crop.w * 0.12, cy + crop.h * 0.18, crop.w * 0.76, crop.h * 0.2);
+        ctx.fillStyle = b;
+        ctx.fillRect(cx + crop.w * 0.2, cy + crop.h * 0.44, crop.w * 0.48, crop.h * 0.34);
+        ctx.fillStyle = a;
+        ctx.beginPath();
+        ctx.arc(cx + crop.w * 0.67, cy + crop.h * 0.35, crop.w * 0.13, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+      return texture;
+    }
+
+    let artTexture;
+    try {
+      artTexture = await new Promise((resolve, reject) => loader.load(ART_URL, resolve, undefined, reject));
+      artTexture.colorSpace = THREE.SRGBColorSpace;
+      artTexture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+    } catch (error) {
+      console.warn('Artwork sheet failed to load, using fallback art texture instead.', error);
+      artTexture = makeFallbackArtTexture();
+    }
+
+    await Promise.race([document.fonts.ready, new Promise((resolve) => setTimeout(resolve, 4000))]);
+
+    const labelTextures = prints.map((print) => labelTextureFor(print));
+
+    function makePrintTexture(index) {
+      const crop = cropBounds[index];
+      const texture = artTexture.clone();
+      texture.needsUpdate = true;
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+      texture.repeat.set(crop.w / SHEET_W, crop.h / SHEET_H);
+      texture.offset.set(crop.x / SHEET_W, 1 - (crop.y + crop.h) / SHEET_H);
+      return texture;
+    }
+
+    function frameGroup(index, angle, radius, outward = false) {
+      const print = prints[index];
+      const group = new THREE.Group();
+      group.position.set(radius * Math.cos(angle), 0, radius * Math.sin(angle));
+      if (outward) {
+        group.lookAt(group.position.clone().multiplyScalar(2));
+      } else {
+        group.lookAt(0, 0, 0);
+      }
+
+      const halo = new THREE.Mesh(
+        new THREE.PlaneGeometry(2.1 * PW, 1.75 * PH),
+        new THREE.MeshBasicMaterial({ map: haloTexture, transparent: true, depthWrite: false, fog: true })
+      );
+      halo.position.set(0, PY + 0.05, 0.005);
+      group.add(halo);
+
+      const shadow = new THREE.Mesh(
+        new THREE.PlaneGeometry(1.25 * PW, 1.18 * PH),
+        new THREE.MeshBasicMaterial({ map: shadowTexture, transparent: true, depthWrite: false, fog: true })
+      );
+      shadow.position.set(0.05, PY - 0.06, 0.01);
+      group.add(shadow);
+
+      const frame = new THREE.Mesh(
+        new THREE.BoxGeometry(PW + 0.07, PH + 0.07, 0.06),
+        new THREE.MeshBasicMaterial({ color: '#D3AA72', fog: true })
+      );
+      frame.position.set(0, PY, 0.045);
+      group.add(frame);
+
+      const plane = new THREE.Mesh(
+        new THREE.PlaneGeometry(PW, PH),
+        new THREE.MeshBasicMaterial({ map: makePrintTexture(index), fog: true })
+      );
+      plane.position.set(0, PY, 0.077);
+      plane.userData.printRef = { index, angle, outward, plane, group };
+      group.add(plane);
+
+      const label = new THREE.Mesh(
+        new THREE.PlaneGeometry(.92, .92 * 260 / 640),
+        new THREE.MeshBasicMaterial({ map: labelTextures[index], transparent: true, depthWrite: false, fog: true })
+      );
+      label.position.set(-PW / 2 + .46, PY - PH / 2 - .42, 0.02);
+      group.add(label);
+
+      scene.add(group);
+      world.printObjects.push(plane);
+    }
+
+    // The outer wall reuses one cropped texture per mounted print instead of creating a discarded extra clone. 
+    for (let s = 0; s < 36; s += 1) {
+      frameGroup(s % 9, s * Math.PI * 2 / 36, 17.98, false);
+    }
+    for (let k = 0; k < 24; k += 1) {
+      frameGroup((k + 4) % 9, (k + .5) * Math.PI * 2 / 24, 12.22, true);
+    }
+
+    function wrapNear(current, target) {
+      while (target - current > Math.PI) target -= Math.PI * 2;
+      while (target - current < -Math.PI) target += Math.PI * 2;
+      return target;
+    }
+
+    function applyPose(pose) {
+      const tangent = new THREE.Vector3(Math.sin(pose.th), 0, -Math.cos(pose.th));
+      const normal = new THREE.Vector3(Math.cos(pose.th), 0, Math.sin(pose.th));
+      const pos = new THREE.Vector3(pose.r * Math.cos(pose.th), pose.y, pose.r * Math.sin(pose.th));
+      const direction = tangent.multiplyScalar(Math.cos(pose.yaw)).add(normal.multiplyScalar(Math.sin(pose.yaw)));
+      camera.position.copy(pos);
+      camera.lookAt(pos.clone().add(direction).add(new THREE.Vector3(0, pose.pitch, 0)));
+    }
+
+    function resize() {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      renderer.setSize(w, h, false);
+      camera.aspect = w / h;
+      camera.fov = w >= h ? 56 : 70;
+      camera.updateProjectionMatrix();
+      applyAllCrops();
+    }
+
+    function currentFocusPose(printRef) {
+      const isOuter = !printRef.outward;
+      if (isOuter) {
+        return state.small
+          ? { th: printRef.angle, r: 18 - 5.2, yaw: Math.PI / 2, y: PY - 1.05, pitch: 0 }
+          : { th: printRef.angle, r: 18 - 4.26, yaw: Math.PI / 2, y: PY - .52, pitch: 0 };
+      }
+      return state.small
+        ? { th: printRef.angle, r: 12.2 + 5.2, yaw: -Math.PI / 2, y: PY - 1.05, pitch: 0 }
+        : { th: printRef.angle, r: 12.2 + 4.26, yaw: -Math.PI / 2, y: PY - .52, pitch: 0 };
+    }
+
+    function startGlide(from, to, onDone) {
+      const duration = reducedDuration(950);
+      world.glide = {
+        start: performance.now(),
+        duration,
+        from: { ...from },
+        to: { ...to, th: wrapNear(from.th, to.th) },
+        onDone
+      };
+    }
+
+    function focusPrint(printRef) {
+      state.currentPrint = printRef.index;
+      state.focusedPrintRef = printRef;
+      setHintFocus(true);
+      const pose = currentFocusPose(printRef);
+      startGlide({ ...world.pose }, pose, () => {
+        world.pose = { ...pose, th: wrapNear(world.pose.th, pose.th) };
+      });
+    }
+
+    function stepBackToWalk() {
+      if (!state.focusedPrintRef) return;
+      const from = { ...world.pose };
+      state.focusedPrintRef = null;
+      setHintFocus(false);
+      state.targetTh = from.th + state.walkOffset;
+      const to = { ...world.walk, th: state.targetTh };
+      startGlide(from, to, () => {
+        world.pose = { ...to };
+      });
+      openPill.classList.remove('show');
+    }
+
+    function setHintFocus(focused) {
+      hintLine1.textContent = focused ? 'Click the painting to open it' : 'Scroll or drag to walk round';
+      hintLine2.textContent = focused ? 'Esc or click away to step back' : 'Click a painting to look closer';
+    }
+
+    function easing(type, t) {
+      if (type === 'quart') return 1 - Math.pow(1 - t, 4);
+      if (type === 'quad') return 1 - Math.pow(1 - t, 2);
+      if (type === 'cubic') return 1 - Math.pow(1 - t, 3);
+      if (type === 'expo') return t === 1 ? 1 : 1 - Math.pow(2, -10 * t);
+      return t;
+    }
+
+    function updateGlide(now) {
+      if (!world.glide) return;
+      const { start, duration, from, to, onDone } = world.glide;
+      const t = duration === 0 ? 1 : Math.min(1, (now - start) / duration);
+      world.pose.th = from.th + (to.th - from.th) * easing('quart', t);
+      world.pose.yaw = from.yaw + (to.yaw - from.yaw) * easing('quad', t);
+      world.pose.r = from.r + (to.r - from.r) * easing('cubic', t);
+      world.pose.y = from.y + (to.y - from.y) * easing('cubic', t);
+      world.pose.pitch = from.pitch + (to.pitch - from.pitch) * easing('cubic', t);
+      if (t >= 1) {
+        world.glide = null;
+        onDone && onDone();
+      }
+    }
+
+    function introStart() {
+      const now = performance.now();
+      const introFrom = { ...world.walk, th: world.walk.th + 0.16, r: world.walk.r - 0.35 };
+      world.pose = { ...introFrom };
+      world.introStart = now;
+      introMaskItems.forEach((item, index) => {
+        item.animate([
+          { transform: 'translateY(105%)' },
+          { transform: 'translateY(0)' }
+        ], {
+          delay: reducedDuration(250 + index * 60),
+          duration: reducedDuration(1000),
+          easing: 'cubic-bezier(.2,.7,.2,1)',
+          fill: 'backwards'
+        });
+      });
+      navIntroItems.forEach((item, index) => {
+        item.animate([
+          { opacity: 0 },
+          { opacity: 1 }
+        ], {
+          delay: reducedDuration(250 + (introMaskItems.length + index) * 60),
+          duration: reducedDuration(1000),
+          easing: 'cubic-bezier(.2,.7,.2,1)',
+          fill: 'backwards'
+        });
+      });
+      veil.animate([{ opacity: 1 }, { opacity: 0 }], { duration: reducedDuration(900), easing: 'ease-out', fill: 'forwards' });
+    }
+
+    function updateIntro(now) {
+      if (!world.introStart) return false;
+      const duration = reducedDuration(1400);
+      const t = duration === 0 ? 1 : Math.min(1, (now - world.introStart) / duration);
+      const e = easing('expo', t);
+      world.pose.th = world.walk.th + 0.16 + (world.walk.th - (world.walk.th + 0.16)) * e;
+      world.pose.r = (world.walk.r - 0.35) + .35 * e;
+      world.pose.yaw = world.walk.yaw;
+      world.pose.y = world.walk.y;
+      world.pose.pitch = world.walk.pitch;
+      if (t >= 1) {
+        world.introStart = null;
+        world.pose = { ...world.walk, th: state.targetTh };
+      }
+      return true;
+    }
+
+    function projectPrintRect(printRef) {
+      const corners = [
+        new THREE.Vector3(-PW / 2, -PH / 2, 0.077),
+        new THREE.Vector3(PW / 2, -PH / 2, 0.077),
+        new THREE.Vector3(PW / 2, PH / 2, 0.077),
+        new THREE.Vector3(-PW / 2, PH / 2, 0.077)
+      ];
+      const worldCorners = corners.map((corner) => printRef.group.localToWorld(corner.clone().add(new THREE.Vector3(0, PY, 0))));
+      const projected = worldCorners.map((v) => v.project(camera));
+      const pts = projected.map((p) => ({ x: (p.x * .5 + .5) * window.innerWidth, y: (-p.y * .5 + .5) * window.innerHeight }));
+      const xs = pts.map((p) => p.x);
+      const ys = pts.map((p) => p.y);
+      const left = Math.min(...xs);
+      const top = Math.min(...ys);
+      const right = Math.max(...xs);
+      const bottom = Math.max(...ys);
+      return { left, top, width: right - left, height: bottom - top };
+    }
+
+    function applyCropBackground(el, index) {
+      if (!el) return;
+      const crop = cropBounds[index];
+      const rect = el.getBoundingClientRect();
+      const W = rect.width || parseFloat(getComputedStyle(el).width) || 1;
+      const H = rect.height || parseFloat(getComputedStyle(el).height) || 1;
+      const sx = W / crop.w;
+      const sy = H / crop.h;
+      el.style.backgroundImage = `url(${ART_URL})`;
+      el.style.backgroundSize = `${SHEET_W * sx}px ${SHEET_H * sy}px`;
+      el.style.backgroundPosition = `${-crop.x * sx}px ${-crop.y * sy}px`;
+      el.style.backgroundRepeat = 'no-repeat';
+    }
+
+    function applyAllCrops() {
+      document.querySelectorAll('[data-crop-index]').forEach((el) => applyCropBackground(el, Number(el.dataset.cropIndex)));
+    }
+
+    function createChip(target, value, selected, onClick, className = 'chip') {
+      const btn = document.createElement('button');
+      btn.className = `${className}${selected ? ' selected' : ''}`;
+      btn.textContent = value;
+      btn.addEventListener('click', onClick);
+      target.appendChild(btn);
+      return btn;
+    }
+
+    function renderOptions() {
+      for (const [group, values] of Object.entries(options)) {
+        const row = document.getElementById(group + 'Chips');
+        row.innerHTML = '';
+        document.getElementById(group + 'Current').textContent = state.selections[group];
+        if (group === 'frame') {
+          values.forEach((value) => {
+            const btn = document.createElement('button');
+            const modifier = value === 'Classic Frame' ? ' classic' : value === 'Framed Canvas' ? ' canvas' : '';
+            btn.className = `frame-chip chip${modifier}${state.selections.frame === value ? ' selected' : ''}`;
+            btn.innerHTML = `<div class="thumb" data-crop-index="${state.currentPrint}"></div><div class="label">${value}</div>`;
+            btn.addEventListener('click', () => {
+              state.selections.frame = value;
+              renderOptions();
+            });
+            row.appendChild(btn);
+          });
+        } else {
+          values.forEach((value) => {
+            createChip(row, value, state.selections[group] === value, () => {
+              state.selections[group] = value;
+              renderOptions();
+            });
+          });
+        }
+      }
+      applyAllCrops();
+    }
+
+    function renderAccordion() {
+      const accordion = document.getElementById('accordion');
+      accordion.innerHTML = '';
+      accordions.forEach(([title, body], index) => {
+        const item = document.createElement('div');
+        item.className = 'acc-item' + (index === 0 ? ' open' : '');
+        item.innerHTML = `<button class="acc-head"><span>${title}</span><span>+</span></button><div class="acc-body"><div class="acc-body-inner">${body}</div></div>`;
+        accordion.appendChild(item);
+        const bodyEl = item.querySelector('.acc-body');
+        if (index === 0) bodyEl.style.height = bodyEl.scrollHeight + 'px';
+        item.querySelector('.acc-head').addEventListener('click', () => {
+          const open = item.classList.toggle('open');
+          bodyEl.style.height = open ? bodyEl.scrollHeight + 'px' : '0px';
+        });
+      });
+    }
+
+    function populateCard(card, index, type) {
+      const print = prints[index];
+      card.dataset.printIndex = index;
+      card.innerHTML = `
+        <div class="${type}-art" data-crop-index="${index}"></div>
+        <div class="${type === 'collection' ? 'card-title' : 'list-title'}">${print.title}</div>
+        <div class="${type === 'collection' ? 'card-artist' : 'list-artist'}">${print.artist}</div>
+        <div class="${type === 'collection' ? 'card-price' : 'list-price'}">$ ${print.price}.00</div>
+      `;
+      card.addEventListener('click', () => openPrintFromDom(index, card.querySelector(`.${type}-art`)));
+    }
+
+    function renderCollection() {
+      collectionRow.innerHTML = '';
+      for (let i = 0; i < 4; i += 1) {
+        const index = (state.currentPrint + i) % prints.length;
+        const card = document.createElement('button');
+        card.className = 'collection-card';
+        populateCard(card, index, 'collection');
+        collectionRow.appendChild(card);
+      }
+      applyAllCrops();
+    }
+
+    function renderList() {
+      listGrid.innerHTML = '';
+      prints.forEach((_, index) => {
+        const card = document.createElement('button');
+        card.className = 'list-card';
+        populateCard(card, index, 'list');
+        listGrid.appendChild(card);
+      });
+      applyAllCrops();
+    }
+
+    function formatMoney(value) {
+      return `$ ${value.toFixed(2)}`;
+    }
+
+    function renderPage() {
+      const print = prints[state.currentPrint];
+      pageTitle.textContent = print.title;
+      pageArtist.textContent = print.artist;
+      pageDesc.textContent = print.description;
+      pagePrice.textContent = formatMoney(print.price);
+      pageArt.dataset.cropIndex = state.currentPrint;
+      pageArt.classList.add('hidden-real');
+      pageMeta.classList.remove('show');
+      pageSide.classList.remove('show');
+      collectionBand.classList.remove('show');
+      state.quantity = 1;
+      document.getElementById('qtyValue').textContent = '1';
+      renderOptions();
+      renderAccordion();
+      renderCollection();
+      applyAllCrops();
+      window.setTimeout(() => {
+        pageMeta.classList.add('show');
+        pageSide.classList.add('show');
+        collectionBand.classList.add('show');
+      }, state.detailDelay);
+    }
+
+    function openPanel(name) {
+      state.mode = name;
+      const panelOpen = name !== 'gallery';
+      document.body.classList.toggle('app-open-nav', panelOpen);
+      gui.classList.toggle('hidden', panelOpen);
+      page.classList.toggle('open', name === 'page');
+      list.classList.toggle('open', name === 'list');
+      document.getElementById('galleryToggle').classList.toggle('active', name === 'gallery');
+      document.getElementById('listToggle').classList.toggle('active', name === 'list');
+    }
+
+    function focusLastPrintFromCurrentAngle() {
+      const current = world.pose.th;
+      let best = null;
+      world.printObjects.forEach((mesh) => {
+        const ref = mesh.userData.printRef;
+        if (ref.outward) return;
+        const angle = wrapNear(current, ref.angle);
+        const dist = Math.abs(angle - current);
+        if (!best || dist < best.dist || (Math.abs(dist - best.dist) < 1e-6 && ref.index === state.currentPrint)) {
+          best = { ref, dist };
+        }
+      });
+      if (best) focusPrint(best.ref);
+    }
+
+    function closeToGallery() {
+      openPanel('gallery');
+      focusLastPrintFromCurrentAngle();
+    }
+
+    function createFlyer(fromRect, toEl, index, onDone) {
+      const flyer = document.createElement('div');
+      flyer.className = 'flyer';
+      flyer.dataset.cropIndex = index;
+      flyer.style.left = fromRect.left + 'px';
+      flyer.style.top = fromRect.top + 'px';
+      flyer.style.width = fromRect.width + 'px';
+      flyer.style.height = fromRect.height + 'px';
+      document.body.appendChild(flyer);
+      applyCropBackground(flyer, index);
+      const toRect = toEl.getBoundingClientRect();
+      const deltaX = toRect.left - fromRect.left;
+      const deltaY = toRect.top - fromRect.top;
+      const scaleX = toRect.width / fromRect.width;
+      const scaleY = toRect.height / fromRect.height;
+      const animation = flyer.animate([
+        { transform: 'translate(0px, 0px) scale(1, 1)' },
+        { transform: `translate(${deltaX}px, ${deltaY}px) scale(${scaleX}, ${scaleY})` }
+      ], {
+        duration: reducedDuration(300),
+        easing: 'cubic-bezier(.25,.75,.25,1)',
+        fill: 'forwards'
+      });
+      animation.finished.catch(() => {}).then(() => {
+        flyer.remove();
+        onDone && onDone();
+      });
+    }
+
+    function openPrintFromRef(printRef) {
+      state.currentPrint = printRef.index;
+      renderPage();
+      openPanel('page');
+      const rect = projectPrintRect(printRef);
+      createFlyer(rect, pageArt, printRef.index, () => {
+        pageArt.classList.remove('hidden-real');
+        applyAllCrops();
+      });
+    }
+
+    function openPrintFromDom(index, sourceEl) {
+      state.currentPrint = index;
+      renderPage();
+      openPanel('page');
+      page.scrollTo({ top: 0, behavior: state.reduced ? 'auto' : 'smooth' });
+      const rect = sourceEl.getBoundingClientRect();
+      createFlyer(rect, pageArt, index, () => {
+        pageArt.classList.remove('hidden-real');
+        applyAllCrops();
+      });
+    }
+
+    function updateBagBadge() {
+      const total = state.bag.reduce((sum, item) => sum + item.quantity, 0);
+      bagBadge.textContent = String(total);
+      bagBadge.classList.toggle('show', total > 0);
+      const subtotal = state.bag.reduce((sum, item) => sum + item.quantity * prints[item.index].price, 0);
+      subtotalValue.textContent = formatMoney(subtotal);
+    }
+
+    // The bag stores every selected product option so separate variants never merge into the wrong line item. 
+    function renderDrawer() {
+      drawerItems.innerHTML = '';
+      if (!state.bag.length) {
+        drawerItems.innerHTML = '<div class="drawer-empty">YOUR BAG IS EMPTY</div>';
+        updateBagBadge();
+        return;
+      }
+      state.bag.forEach((item, idx) => {
+        const print = prints[item.index];
+        const row = document.createElement('div');
+        row.className = 'drawer-item';
+        row.innerHTML = `
+          <div class="drawer-art" data-crop-index="${item.index}"></div>
+          <div>
+            <div class="drawer-item-title">${print.title}</div>
+            <div class="drawer-item-artist">${print.artist}</div>
+            <div class="drawer-item-size">${item.size}</div>
+            <div class="drawer-item-options">${item.paper}\n${item.signature}\n${item.frame}</div>
+            <div class="drawer-item-price">${formatMoney(print.price)}</div>
+            <div class="drawer-controls">
+              <div class="drawer-stepper">
+                <button aria-label="Decrease quantity">−</button>
+                <span>${item.quantity}</span>
+                <button aria-label="Increase quantity">+</button>
+              </div>
+              <button class="trash-btn" aria-label="Remove item">${iconTrash()}</button>
+            </div>
+          </div>
+        `;
+        const [minus, plus] = row.querySelectorAll('.drawer-stepper button');
+        minus.addEventListener('click', () => {
+          item.quantity = Math.max(1, item.quantity - 1);
+          renderDrawer();
+        });
+        plus.addEventListener('click', () => {
+          item.quantity = Math.min(9, item.quantity + 1);
+          renderDrawer();
+        });
+        row.querySelector('.trash-btn').addEventListener('click', () => {
+          state.bag.splice(idx, 1);
+          renderDrawer();
+        });
+        drawerItems.appendChild(row);
+        window.setTimeout(() => row.classList.add('show'), state.bagDelay);
+      });
+      updateBagBadge();
+      applyAllCrops();
+    }
+
+    function openDrawer() {
+      drawer.classList.add('open');
+    }
+
+    function closeDrawer() {
+      drawer.classList.remove('open');
+    }
+
+    // Matching bag lines require the same print and the same full option set so configured variants remain distinct. 
+    function addToBag() {
+      const selected = {
+        paper: state.selections.paper,
+        size: state.selections.size,
+        signature: state.selections.signature,
+        frame: state.selections.frame
+      };
+      const existing = state.bag.find((item) => item.index === state.currentPrint
+        && item.paper === selected.paper
+        && item.size === selected.size
+        && item.signature === selected.signature
+        && item.frame === selected.frame);
+      if (existing) {
+        existing.quantity = Math.min(9, existing.quantity + state.quantity);
+      } else {
+        state.bag.push({ index: state.currentPrint, quantity: state.quantity, ...selected });
+      }
+      renderDrawer();
+      openDrawer();
+    }
+
+    document.getElementById('qtyDown').addEventListener('click', () => {
+      state.quantity = Math.max(1, state.quantity - 1);
+      document.getElementById('qtyValue').textContent = String(state.quantity);
+    });
+    document.getElementById('qtyUp').addEventListener('click', () => {
+      state.quantity = Math.min(9, state.quantity + 1);
+      document.getElementById('qtyValue').textContent = String(state.quantity);
+    });
+    document.getElementById('addToBag').addEventListener('click', addToBag);
+    document.getElementById('drawerClose').addEventListener('click', closeDrawer);
+    document.getElementById('bagButton').addEventListener('click', openDrawer);
+    document.getElementById('galleryToggle').addEventListener('click', closeToGallery);
+    document.getElementById('listToggle').addEventListener('click', () => openPanel('list'));
+    document.getElementById('enterCollection').addEventListener('click', () => openPanel('list'));
+    document.querySelectorAll('[data-action="gallery"]').forEach((el) => el.addEventListener('click', (e) => { e.preventDefault(); closeToGallery(); }));
+    document.querySelectorAll('[data-action="list"]').forEach((el) => el.addEventListener('click', (e) => { e.preventDefault(); openPanel('list'); }));
+    document.getElementById('viewInRoom').addEventListener('click', closeToGallery);
+    document.getElementById('prevBtn').addEventListener('click', () => snapWalk(-1));
+    document.getElementById('nextBtn').addEventListener('click', () => snapWalk(1));
+
+    function snapWalk(nextDir) {
+      if (state.focusedPrintRef) {
+        stepBackToWalk();
+        return;
+      }
+      const d = nextDir > 0 ? 1 : -1;
+      state.targetTh = (Math.round((state.targetTh - state.walkOffset) / STEP) - d) * STEP + state.walkOffset;
+    }
+
+    renderList();
+    renderPage();
+    renderDrawer();
+    openPanel('gallery');
+
+    let down = null;
+    let dragged = false;
+
+    function setPointerFromEvent(event) {
+      const x = event.clientX / window.innerWidth * 2 - 1;
+      const y = -(event.clientY / window.innerHeight) * 2 + 1;
+      state.pointer.set(x, y);
+      state.hoverPoint.x = event.clientX;
+      state.hoverPoint.y = event.clientY;
+    }
+
+    function updateHover(event) {
+      setPointerFromEvent(event);
+      raycaster.setFromCamera(state.pointer, camera);
+      const hits = raycaster.intersectObjects(world.printObjects, false);
+      state.hoverRef = hits[0]?.object?.userData?.printRef ?? null;
+      gallery.style.cursor = state.hoverRef ? 'pointer' : (down ? 'grabbing' : 'grab');
+      if (state.focusedPrintRef && state.hoverRef && state.hoverRef.index === state.focusedPrintRef.index && state.hoverRef.outward === state.focusedPrintRef.outward) {
+        openPill.classList.add('show');
+        if (state.small) {
+          const rect = projectPrintRect(state.focusedPrintRef);
+          openPill.style.left = rect.left + rect.width / 2 + 'px';
+          openPill.style.top = rect.top + rect.height * .55 + 'px';
+        } else {
+          openPill.style.left = event.clientX + 'px';
+          openPill.style.top = event.clientY + 'px';
+        }
+      } else {
+        openPill.classList.remove('show');
+      }
+    }
+
+    gallery.addEventListener('pointerdown', (event) => {
+      if (state.mode !== 'gallery') return;
+      down = { x: event.clientX, y: event.clientY, th: state.targetTh };
+      dragged = false;
+      gallery.setPointerCapture(event.pointerId);
+      gallery.classList.add('dragging');
+    });
+
+    gallery.addEventListener('pointermove', (event) => {
+      updateHover(event);
+      if (!down || state.mode !== 'gallery') return;
+      const dx = event.clientX - down.x;
+      const dy = event.clientY - down.y;
+      if (!dragged && Math.hypot(dx, dy) > 6) dragged = true;
+      if (dragged) {
+        if (state.focusedPrintRef) {
+          stepBackToWalk();
+          down = null;
+          gallery.classList.remove('dragging');
+          return;
+        }
+        const delta = Math.abs(dx) > Math.abs(dy) ? dx : dy;
+        state.targetTh = down.th + delta * (state.small ? 0.0042 : 0.0022);
+      }
+    });
+
+    gallery.addEventListener('pointerup', (event) => {
+      gallery.classList.remove('dragging');
+      if (!down || state.mode !== 'gallery') return;
+      const wasDragged = dragged;
+      down = null;
+      if (wasDragged) return;
+      setPointerFromEvent(event);
+      raycaster.setFromCamera(state.pointer, camera);
+      const hits = raycaster.intersectObjects(world.printObjects, false);
+      const ref = hits[0]?.object?.userData?.printRef;
+      if (ref) {
+        if (state.focusedPrintRef && ref.index === state.focusedPrintRef.index && ref.outward === state.focusedPrintRef.outward) {
+          openPrintFromRef(ref);
+        } else {
+          focusPrint(ref);
+        }
+      } else if (state.focusedPrintRef) {
+        stepBackToWalk();
+      }
+    });
+
+    gallery.addEventListener('pointerleave', () => {
+      if (!down) openPill.classList.remove('show');
+    });
+
+    gallery.addEventListener('wheel', (event) => {
+      if (state.mode !== 'gallery') return;
+      event.preventDefault();
+      if (state.focusedPrintRef) {
+        stepBackToWalk();
+        return;
+      }
+      const factor = event.deltaMode === 1 ? 33 : 1;
+      state.targetTh += -event.deltaY * factor * 0.0016;
+    }, { passive: false });
+
+    window.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        if (drawer.classList.contains('open')) {
+          closeDrawer();
+          return;
+        }
+        if (state.mode === 'page' || state.mode === 'list') {
+          closeToGallery();
+          return;
+        }
+        if (state.focusedPrintRef) {
+          stepBackToWalk();
+        }
+      }
+      if (['ArrowRight', 'ArrowDown'].includes(event.key)) snapWalk(1);
+      if (['ArrowLeft', 'ArrowUp'].includes(event.key)) snapWalk(-1);
+    });
+
+    mmSmall.addEventListener('change', () => {
+      updateResponsiveState();
+      setWalkPoseByViewport();
+      resize();
+    });
+    mmReduced.addEventListener('change', updateResponsiveState);
+    window.addEventListener('resize', resize);
+
+    function animate() {
+      requestAnimationFrame(animate);
+      const now = performance.now();
+      const dt = clock.getDelta();
+
+      if (updateIntro(now)) {
+        applyPose(world.pose);
+        renderer.render(scene, camera);
+        return;
+      }
+
+      if (world.glide) {
+        updateGlide(now);
+      } else if (state.mode === 'gallery' && !state.focusedPrintRef) {
+        world.pose.th += state.reduced ? (state.targetTh - world.pose.th) : (state.targetTh - world.pose.th) * (1 - Math.exp(-dt / 0.36));
+        world.pose.r = world.walk.r;
+        world.pose.yaw = world.walk.yaw;
+        world.pose.y = world.walk.y;
+        world.pose.pitch = world.walk.pitch;
+      }
+
+      applyPose(world.pose);
+      renderer.render(scene, camera);
+    }
+
+    resize();
+    introStart();
+    animate();
+  </script>
+</body>
+</html>
