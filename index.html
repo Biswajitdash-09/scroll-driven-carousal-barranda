@@ -391,9 +391,11 @@
     }
     .open-pill.show { opacity: 1; }
 
+    /* Closed panels stop painting and interaction so the open page fully covers the gallery underneath. */
     .panel {
       position: fixed;
       inset: 0;
+      display: none;
       background: var(--page);
       opacity: 0;
       visibility: hidden;
@@ -402,6 +404,7 @@
       overscroll-behavior: contain;
     }
     .panel.open {
+      display: block;
       opacity: 1;
       visibility: visible;
       transition: opacity .3s ease;
